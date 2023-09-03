@@ -38,4 +38,4 @@ const emitterSocket = socket(socketServerUrl);
 setInterval(() => {
   const dataStream = generateDataStream();
   emitterSocket.emit('data-stream', dataStream);
-}, 10000); //
+}, 10000); 
