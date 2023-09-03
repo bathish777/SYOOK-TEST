@@ -1,0 +1,59 @@
+const socket = require('socket.io');
+const express = require('express');
+const http = require('http');
+const crypto = require('crypto');
+const mongoose = require('mongoose');
+const moment = require('moment');
+
+const app = express();
+const server = http.createServer(app);
+const io = socket(server);
+
+// MongoDB setup (make sure to replace with your connection URL and schema)
+mongoose.connect('mongodb://localhost/timeseriesdb', { useNewUrlParser: true });
+const Schema = mongoose.Schema;
+
+const dataSchema = new Schema({
+  name: String,
+  origin: String,
+  destination: String,
+  secret_key: String,
+  timestamp: Date,
+});
+
+const DataModel = mongoose.model('Data', dataSchema);
+
+io.on('connection', (socket) => {
+  console.log('Client connected');
+
+  socket.on('data-stream', (dataStream) => {
+    dataStream.forEach((message) => {
+      const calculatedSecretKey = calculateSecretKey(message);
+      if (calculatedSecretKey === message.secret_key) {
+        message.timestamp = moment();
+        const dataToSave = new DataModel(message);
+        dataToSave.save((err) => {
+          if (err) {
+            console.error('Error saving data:', err);
+          } else {
+            console.log('Data saved successfully.');
+          }
+        });
+      }
+    });
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+  });
+});
+
+server.listen(3000, () => {
+  console.log('Listener service listening on port 3000');
+});
+
+const calculateSecretKey = (message) => {
+  const hash = crypto.createHash('sha256');
+  hash.update(JSON.stringify(message));
+  return hash.digest('hex');
+};
