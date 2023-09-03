@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-time Data Dashboard</title>
+</head>
+<body>
+  <h1>Real-time Data Dashboard</h1>
+  <div id="data-container"></div>
+
+  <script>
+    const socket = io('http://localhost:3000'); // Replace with your server URL
+
+    socket.on('connect', () => {
+      console.log('Connected to server');
+    });
+
+    socket.on('data-stream', (dataStream) => {
+      updateDataDashboard(dataStream);
+    });
+
+    const updateDataDashboard = (dataStream) => {
+      const dataContainer = document.getElementById('data-container');
+      dataContainer.innerHTML = ''; // Clear previous data
+
+      dataStream.forEach((message) => {
+        const dataItem = document.createElement('div');
+        dataItem.textContent = JSON.stringify(message);
+        dataContainer.appendChild(dataItem);
+      });
+    };
+  </script>
+</body>
+</html>
